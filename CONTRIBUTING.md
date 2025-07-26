@@ -1,6 +1,6 @@
-# Contributing to AI Scammer Simulation
+# Contributing to ScamSimAI
 
-Thank you for your interest in contributing to the AI Scammer Simulation project! This guide will help you get started with contributing to our codebase.
+Thank you for your interest in contributing to the ScamSimAI project! This guide will help you get started with contributing to our codebase.
 
 ## 🎯 Project Vision
 

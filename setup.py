@@ -185,6 +185,51 @@ class SetupManager:
         except subprocess.CalledProcessError:
             self.print_warning("pip upgrade failed, continuing anyway")
     
+    def _install_with_live_output(self, command: List[str], description: str, cwd: Optional[Path] = None) -> bool:
+        """Install packages with live output streaming"""
+        print(f"{Colors.CYAN}📦 {description}{Colors.RESET}")
+        try:
+            # Use Popen for real-time output streaming
+            process = subprocess.Popen(
+                command, 
+                cwd=cwd or self.project_root,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1,
+                universal_newlines=True
+            )
+            
+            # Stream output in real-time
+            if process.stdout:
+                while True:
+                    output = process.stdout.readline()
+                    if output == '' and process.poll() is not None:
+                        break
+                    if output.strip():
+                        line = output.strip()
+                        # Color code different types of output
+                        if "Collecting" in line:
+                            print(f"{Colors.BLUE}🔍 {line}{Colors.RESET}")
+                        elif "Downloading" in line or "%" in line:
+                            print(f"{Colors.CYAN}⬇️  {line}{Colors.RESET}")
+                        elif "Installing" in line:
+                            print(f"{Colors.GREEN}📦 {line}{Colors.RESET}")
+                        elif "Successfully installed" in line:
+                            print(f"{Colors.GREEN}✅ {line}{Colors.RESET}")
+                        elif "ERROR" in line or "error" in line.lower():
+                            print(f"{Colors.RED}❌ {line}{Colors.RESET}")
+                        elif "Requirement already satisfied" in line:
+                            print(f"{Colors.YELLOW}✓ {line}{Colors.RESET}")
+                        else:
+                            print(f"   {line}")
+            
+            # Check if process completed successfully
+            return process.returncode == 0
+                    
+        except Exception:
+            return False
+
     def install_python_dependencies(self):
         """Install Python dependencies"""
         self.print_step(3, "Installing Python Dependencies")
@@ -193,19 +238,23 @@ class SetupManager:
         requirements_file = self.project_root / "requirements.txt"
         if requirements_file.exists():
             print("Installing dependencies from requirements.txt...")
-            try:
-                self.run_command([
-                    str(self.venv_pip), "install", "-r", str(requirements_file)
-                ])
+            print(f"{Colors.YELLOW}   (This may take a few minutes, especially for torch/transformers){Colors.RESET}")
+            
+            success = self._install_with_live_output([
+                str(self.venv_pip), "install", "-r", str(requirements_file), 
+                "--progress-bar", "on"
+            ], "Running: pip install -r requirements.txt")
+            
+            if success:
                 self.print_success("Python dependencies installed from requirements.txt")
                 return
-            except subprocess.CalledProcessError:
+            else:
                 self.print_warning("Failed to install from requirements.txt, trying individual packages")
         
         # Fallback to individual packages
         packages = [
             "fastapi>=0.104.0",
-            "uvicorn[standard]>=0.24.0",
+            "uvicorn[standard]>=0.24.0", 
             "pydantic>=2.5.0",
             "python-dotenv>=1.0.0",
             "transformers>=4.35.0",
@@ -219,12 +268,16 @@ class SetupManager:
         ]
         
         print("Installing Python packages individually...")
-        for package in packages:
-            try:
-                self.run_command([str(self.venv_pip), "install", package])
-                print(f"  ✓ {package}")
-            except subprocess.CalledProcessError:
-                print(f"  ✗ Failed to install {package}")
+        for i, package in enumerate(packages, 1):
+            print(f"{Colors.BLUE}[{i}/{len(packages)}] Installing {package}...{Colors.RESET}")
+            success = self._install_with_live_output([
+                str(self.venv_pip), "install", package, "--progress-bar", "on"
+            ], f"Installing {package}")
+            
+            if success:
+                print(f"{Colors.GREEN}  ✓ {package} installed successfully{Colors.RESET}")
+            else:
+                print(f"{Colors.RED}  ✗ Failed to install {package}{Colors.RESET}")
         
         self.print_success("Python dependencies installation completed")
     
@@ -244,10 +297,13 @@ class SetupManager:
             return
         
         print("Installing Node.js dependencies...")
-        try:
-            self.run_command(["npm", "install"], cwd=frontend_path)
+        success = self._install_with_live_output([
+            "npm", "install"
+        ], "Running: npm install", cwd=frontend_path)
+        
+        if success:
             self.print_success("Frontend dependencies installed")
-        except:
+        else:
             self.print_error("Failed to install frontend dependencies")
             sys.exit(1)
     
