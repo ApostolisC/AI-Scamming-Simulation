@@ -301,7 +301,7 @@ export default function BatchImportPage() {
           <div className="file-input-section">
             <input
               type="file"
-              webkitdirectory="true"
+              {...({ webkitdirectory: "true" } as any)}
               multiple
               onChange={handleFiles}
               className="file-input"

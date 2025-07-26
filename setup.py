@@ -32,7 +32,9 @@ class Colors:
 
 class SetupManager:
     def __init__(self):
-        self.project_root = Path(__file__).parent.absolute()
+        # Find the actual project root by looking for key files
+        current_dir = Path(__file__).parent.absolute()
+        self.project_root = self._find_project_root(current_dir)
         self.venv_path = self.project_root / "venv"
         self.system = platform.system().lower()
         
@@ -45,6 +47,33 @@ class SetupManager:
             self.venv_python = self.venv_path / "bin" / "python"
             self.venv_pip = self.venv_path / "bin" / "pip"
             self.venv_activate = self.venv_path / "bin" / "activate"
+    
+    def _find_project_root(self, start_path: Path) -> Path:
+        """Find the project root by looking for key files/directories"""
+        current = start_path
+        max_depth = 5  # Prevent infinite loops
+        
+        for _ in range(max_depth):
+            # Check if this looks like the project root
+            if (current / "frontend").exists() and (current / "server").exists():
+                return current
+            # Also check for package.json in case we're in the frontend dir
+            elif (current / "package.json").exists() and (current.parent / "server").exists():
+                return current.parent
+            # Check for setup files
+            elif any((current / f).exists() for f in ["setup.py", "requirements.txt", "README.md"]):
+                # Verify this is the right setup.py by checking for frontend/server dirs
+                if (current / "frontend").exists() or (current / "server").exists():
+                    return current
+            
+            # Move up one level
+            parent = current.parent
+            if parent == current:  # We've reached the root
+                break
+            current = parent
+        
+        # Fallback to the original directory
+        return start_path
     
     def print_step(self, step: int, message: str):
         """Print a step header"""
@@ -116,6 +145,34 @@ class SetupManager:
         except Exception:
             return False, "unknown"
     
+    def _get_npm_command(self) -> List[str]:
+        """Get the correct npm command for the current platform"""
+        if self.system == "windows":
+            # On Windows, npm might be a PowerShell script, batch file, or executable
+            # Try different approaches
+            
+            # First, check if npm.cmd exists (preferred on Windows)
+            if shutil.which("npm.cmd"):
+                return ["npm.cmd"]
+            
+            # Then check for npm.bat
+            if shutil.which("npm.bat"):
+                return ["npm.bat"]
+            
+            # Check for npm.exe
+            if shutil.which("npm.exe"):
+                return ["npm.exe"]
+            
+            # For PowerShell scripts, we need to use powershell to execute them
+            if shutil.which("npm"):
+                # This might be a PowerShell script, so use cmd /c to execute it
+                return ["cmd", "/c", "npm"]
+            
+            # Fallback
+            return ["npm"]
+        else:
+            return ["npm"]
+    
     def check_system_requirements(self):
         """Check all system requirements"""
         self.print_step(1, "Checking System Requirements")
@@ -144,14 +201,16 @@ class SetupManager:
             all_good = False
         
         # Check npm
-        if self.check_command_exists("npm"):
-            npm_version = self.get_version(["npm", "--version"])
+        npm_cmd = self._get_npm_command()
+        if self.check_command_exists(npm_cmd[0]):
+            npm_version = self.get_version(npm_cmd + ["--version"])
             if npm_version:
                 self.print_success(f"npm found: {npm_version}")
             else:
                 self.print_warning("npm found but version check failed")
         else:
             self.print_error("npm required but not found")
+            self.print_info("npm is usually installed with Node.js")
             all_good = False
         
         if not all_good:
@@ -209,25 +268,27 @@ class SetupManager:
                     if output.strip():
                         line = output.strip()
                         # Color code different types of output
-                        if "Collecting" in line:
+                        if any(keyword in line for keyword in ["Collecting", "Found existing installation"]):
                             print(f"{Colors.BLUE}🔍 {line}{Colors.RESET}")
-                        elif "Downloading" in line or "%" in line:
+                        elif any(keyword in line for keyword in ["Downloading", "%", "progress"]):
                             print(f"{Colors.CYAN}⬇️  {line}{Colors.RESET}")
-                        elif "Installing" in line:
+                        elif any(keyword in line for keyword in ["Installing", "added", "packages"]):
                             print(f"{Colors.GREEN}📦 {line}{Colors.RESET}")
-                        elif "Successfully installed" in line:
+                        elif any(keyword in line for keyword in ["Successfully installed", "up to date"]):
                             print(f"{Colors.GREEN}✅ {line}{Colors.RESET}")
-                        elif "ERROR" in line or "error" in line.lower():
+                        elif any(keyword in line.lower() for keyword in ["error", "failed", "warn"]):
                             print(f"{Colors.RED}❌ {line}{Colors.RESET}")
                         elif "Requirement already satisfied" in line:
                             print(f"{Colors.YELLOW}✓ {line}{Colors.RESET}")
                         else:
                             print(f"   {line}")
             
-            # Check if process completed successfully
+            # Wait for process to complete and get return code
+            process.wait()
             return process.returncode == 0
                     
-        except Exception:
+        except Exception as e:
+            print(f"{Colors.RED}❌ Live output failed: {e}{Colors.RESET}")
             return False
 
     def install_python_dependencies(self):
@@ -286,26 +347,54 @@ class SetupManager:
         self.print_step(4, "Setting up Frontend Dependencies")
         
         frontend_path = self.project_root / "frontend"
+        
         if not frontend_path.exists():
-            self.print_error("Frontend directory not found")
+            self.print_error(f"Frontend directory not found at: {frontend_path}")
             return
         
         # Check if package.json exists
         package_json = frontend_path / "package.json"
         if not package_json.exists():
-            self.print_error("package.json not found in frontend directory")
+            self.print_error(f"package.json not found at: {package_json}")
+            # List what's actually in the directory for debugging
+            try:
+                files = [f.name for f in frontend_path.iterdir() if f.is_file()]
+                print(f"{Colors.YELLOW}📁 Files found: {files[:10]}{'...' if len(files) > 10 else ''}{Colors.RESET}")
+            except Exception:
+                pass
             return
         
-        print("Installing Node.js dependencies...")
-        success = self._install_with_live_output([
-            "npm", "install"
-        ], "Running: npm install", cwd=frontend_path)
+        # Get the correct npm command
+        npm_cmd = self._get_npm_command()
+        print(f"{Colors.CYAN}🔍 Using npm command: {' '.join(npm_cmd)}{Colors.RESET}")
         
-        if success:
-            self.print_success("Frontend dependencies installed")
+        print("Installing Node.js dependencies...")
+        print(f"{Colors.CYAN}📂 Working in: {frontend_path}{Colors.RESET}")
+        
+        # Try with live output first
+        success = self._install_with_live_output(
+            npm_cmd + ["install"], 
+            "Running: npm install", 
+            cwd=frontend_path
+        )
+        
+        # If live output fails, try with regular command execution
+        if not success:
+            print(f"{Colors.YELLOW}⚠️ Live output failed, trying standard npm install...{Colors.RESET}")
+            try:
+                self.run_command(npm_cmd + ["install"], cwd=frontend_path, capture_output=False)
+                self.print_success("Frontend dependencies installed")
+            except subprocess.CalledProcessError as e:
+                self.print_error(f"Failed to install frontend dependencies: {e}")
+                self.print_info("Try running 'npm install' manually in the frontend directory")
+                # Additional troubleshooting info
+                print(f"{Colors.YELLOW}💡 Troubleshooting:{Colors.RESET}")
+                print("   • Make sure Node.js is installed: https://nodejs.org/")
+                print("   • Restart your terminal/command prompt after installing Node.js")
+                print("   • Check if npm is in PATH: run 'npm --version' manually")
+                sys.exit(1)
         else:
-            self.print_error("Failed to install frontend dependencies")
-            sys.exit(1)
+            self.print_success("Frontend dependencies installed")
     
     def setup_environment_files(self):
         """Set up environment configuration files"""
@@ -357,10 +446,12 @@ class SetupManager:
         print("Testing frontend build...")
         try:
             frontend_path = self.project_root / "frontend"
-            result = self.run_command(["npm", "run", "build"], cwd=frontend_path)
+            npm_cmd = self._get_npm_command()
+            result = self.run_command(npm_cmd + ["run", "build"], cwd=frontend_path)
             self.print_success("Frontend build test passed")
         except subprocess.CalledProcessError:
-            self.print_warning("Frontend build test failed (might be due to missing environment variables)")
+            self.print_error("Frontend build test failed")
+            self.print_info("Check the console output above for specific errors")
     
     def print_completion_message(self):
         """Print setup completion message"""
