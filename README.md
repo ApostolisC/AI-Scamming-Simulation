@@ -20,6 +20,7 @@ ScamSimAI consists of three main components:
 ```bash
 git clone https://github.com/ApostolisC/AI-Scammer-Simulation
 cd AI\ Scammer\ Simulation
+python3 setup.py
 ```
 
 ### 2. Configure Environment Variables
@@ -28,14 +29,14 @@ Copy the example files and add your API keys:
 **Server Configuration:**
 ```bash
 cd server
-cp .env.example .env
+cp .env.example .env (setup.py script does it automatically)
 # Edit .env with your API keys
 ```
 
 **Frontend Configuration:**
 ```bash
 cd frontend
-cp .env.local.example .env.local
+cp .env.local.example .env.local (setup.py script does it automatically)
 # Edit .env.local with your API configuration
 ```
 
@@ -43,7 +44,7 @@ cp .env.local.example .env.local
 
 **Hugging Face Tokens:**
 1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens)
-2. Create a new token with read access
+2. Create a new token with read access. 2 tokens are required, 1 for prediction and 1 for response generation, but the same token can be used for both. 
 3. Add tokens to `server/.env`:
    ```
    HF_TOKEN_PRED=your-token-here
