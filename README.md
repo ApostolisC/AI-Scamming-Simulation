@@ -1,10 +1,10 @@
-# AI Scammer Simulation
+# ScamSimAI
 
 A sophisticated AI-powered platform for simulating and detecting scam communications. This tool helps users understand scammer tactics through realistic conversations and provides spam detection capabilities.
 
 ## 🎯 Overview
 
-The AI Scammer Simulation consists of three main components:
+ScamSimAI consists of three main components:
 - **Frontend**: Next.js-based web interface for user interactions
 - **Backend**: Python modules for AI-powered text generation and classification
 - **Server**: FastAPI server providing secure API endpoints
@@ -18,7 +18,7 @@ The AI Scammer Simulation consists of three main components:
 
 ### 1. Clone and Setup
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/ApostolisC/AI-Scammer-Simulation
 cd AI\ Scammer\ Simulation
 ```
 
@@ -91,7 +91,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-AI Scammer Simulation/
+ScamSimAI/
 ├── frontend/           # Next.js web application
 │   ├── components/     # React components
 │   ├── lib/           # Utility functions and API config

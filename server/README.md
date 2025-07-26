@@ -25,7 +25,7 @@ cp .env.example .env
 ### 2. Configure Your API Keys
 Edit `.env` file with your credentials:
 ```env
-# Required: Hugging Face tokens for AI models
+# Required: Hugging Face tokens for AI models. One model is for prediction and the other for response generation
 HF_TOKEN_PRED=your-huggingface-token-here
 HF_TOKEN_GEN=your-huggingface-token-here
 

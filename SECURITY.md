@@ -1,8 +1,8 @@
-# Security Guide - AI Scammer Simulation
+# Security Guide - ScamSimAI
 
 ## 🔒 Overview
 
-This security guide outlines the security measures, best practices, and configurations implemented in the AI Scammer Simulation project. Following these guidelines ensures secure deployment and operation of the application.
+This security guide outlines the security measures, best practices, and configurations implemented in the ScamSimAI project. Following these guidelines ensures secure deployment and operation of the application.
 
 ## 🛡️ Security Architecture
 
@@ -480,6 +480,7 @@ Thumbs.db
 # Logs
 logs/
 *.log
+server/api.log
 
 # Model files (if storing locally)
 models/
