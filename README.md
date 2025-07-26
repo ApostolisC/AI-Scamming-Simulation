@@ -12,70 +12,129 @@ ScamSimAI consists of three main components:
 ## 🚀 Quick Start for Users
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Python 3.11+
-- Hugging Face account (for AI model access)
+- **Node.js 18+** and npm
+- **Python 3.11+**
+- **Hugging Face account** (for AI model access)
 
-### 1. Clone and Setup
+### Option 1: Automated Setup (Recommended) ⚡
+
+The easiest way to get started is using our automated setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/ApostolisC/AI-Scammer-Simulation
+cd "AI Scammer Simulation"
+
+# Run the automated setup script
+python setup.py
+```
+
+The setup script will:
+- ✅ Check system requirements
+- ✅ Create a Python virtual environment
+- ✅ Install all Python dependencies with live progress
+- ✅ Install frontend dependencies
+- ✅ Create environment files from templates
+- ✅ Test the installation
+
+### Option 2: Manual Installation 🔧
+
+If you prefer manual setup or need to troubleshoot:
+
+#### 1. Clone and Setup Virtual Environment
 ```bash
 git clone https://github.com/ApostolisC/AI-Scammer-Simulation
-cd AI\ Scammer\ Simulation
+cd "AI Scammer Simulation"
+
+# Create and activate virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate.bat
+# On macOS/Linux:
+source venv/bin/activate
 ```
 
-### 2. Configure Environment Variables
-Copy the example files and add your API keys:
-
-**Server Configuration:**
+#### 2. Install Dependencies
 ```bash
+# Install Python dependencies
+pip install -r requirements.txt
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+```
+
+#### 3. Configure Environment Files
+```bash
+# Copy server environment template
 cd server
 cp .env.example .env
-# Edit .env with your API keys
-```
+cd ..
 
-**Frontend Configuration:**
-```bash
+# Copy frontend environment template
 cd frontend
 cp .env.local.example .env.local
-# Edit .env.local with your API configuration
+cd ..
 ```
 
-### 3. Get Required API Tokens
+### Configure API Tokens 🔑
 
-**Hugging Face Tokens:**
+**Important**: You need **2 Hugging Face tokens** but you can use the **same token for both**.
+
+#### Get Your Hugging Face Token:
 1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens)
-2. Create a new token with read access
-3. Add tokens to `server/.env`:
-   ```
-   HF_TOKEN_PRED=your-token-here
-   HF_TOKEN_GEN=your-token-here
-   ```
+2. Click "New token"
+3. Give it a name (e.g., "ScamSimAI")
+4. Select "Read" access
+5. Click "Generate a token"
+6. **Copy the token** (you won't see it again!)
 
-**API Key:**
-Generate a secure API key for your server:
-```bash
-# Use any secure random string
-API_KEY=your-secure-api-key-here
+#### Configure Tokens:
+Edit `server/.env` and add:
+```env
+# Use the SAME Hugging Face token for both
+HF_TOKEN_PRED=hf_your_token_here
+HF_TOKEN_GEN=hf_your_token_here
+
+# Create a secure API key (any random string)
+API_KEY=your-secure-random-api-key-123
 ```
 
-### 4. Install Dependencies and Run
+Edit `frontend/.env.local` and add:
+```env
+# Must match the API_KEY in server/.env
+NEXT_PUBLIC_API_KEY=your-secure-random-api-key-123
+```
 
-**Start the Server:**
+### Start the Application 🚀
+
+**Important**: Always activate the virtual environment first!
+
+#### Terminal 1 - Start the Server:
 ```bash
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate.bat
+# On macOS/Linux:
+source venv/bin/activate
+
 cd server
-pip install fastapi uvicorn python-dotenv pydantic
 python server.py
 ```
 
-**Start the Frontend:**
+#### Terminal 2 - Start the Frontend:
 ```bash
 cd frontend
-npm install
 npm run dev
 ```
 
-**Access the Application:**
-- Frontend: http://localhost:3000
-- API Documentation: http://localhost:8000/docs
+### Access the Application 🌐
+- **Frontend**: http://localhost:3000
+- **API Documentation**: http://localhost:8000/docs
+- **Health Check**: http://localhost:8000/api/health
 
 ## 🏗️ Architecture
 
@@ -127,9 +186,23 @@ Each component has its own detailed README with development instructions:
 - See `frontend/README.md` for UI development
 - See `backend/README.md` for AI model integration
 
+**Important**: Always work within the virtual environment:
+```bash
+# Activate virtual environment first
+# On Windows:
+venv\Scripts\activate.bat
+# On macOS/Linux:
+source venv/bin/activate
+
+# Then run your development commands
+python server/server.py
+# or
+cd frontend && npm run dev
+```
+
 ### Testing
 ```bash
-# Test server endpoints
+# Test server endpoints (make sure server is running)
 curl http://localhost:8000/api/health
 
 # Test with authentication
@@ -138,6 +211,37 @@ curl -H "Authorization: Bearer your-api-key" \
      -d '{"text":"Test message"}' \
      http://localhost:8000/api/classify
 ```
+
+## 🆘 Troubleshooting
+
+### Common Issues
+
+**"Command not found" errors:**
+- Make sure Node.js and Python are installed and in your PATH
+- Restart your terminal after installing Node.js
+- Run `python --version` and `node --version` to verify
+
+**Virtual environment issues:**
+- Always activate the virtual environment before running Python commands
+- If activation fails, try recreating: `rm -rf venv` then `python -m venv venv`
+
+**npm install fails:**
+- Try deleting `node_modules` and `package-lock.json`, then run `npm install` again
+- Make sure you're in the `frontend` directory
+
+**Server won't start:**
+- Check that you've activated the virtual environment
+- Verify your `.env` file has the correct Hugging Face tokens
+- Make sure no other service is using port 8000
+
+**Frontend build fails:**
+- Check that your `.env.local` file exists and has the correct API key
+- Make sure the API key matches between server and frontend env files
+
+**Hugging Face token errors:**
+- Verify your token has "Read" permissions
+- Make sure you're using the same token for both `HF_TOKEN_PRED` and `HF_TOKEN_GEN`
+- Check that there are no extra spaces in your `.env` file
 
 ## 🤝 Contributing
 
@@ -157,7 +261,9 @@ This tool is for educational and research purposes only. It simulates scammer ta
 
 ## 🆘 Support
 
+- **First**: Try the automated setup script: `python setup.py`
 - Check the documentation in each component's README
+- Review the troubleshooting section above
 - Review the [Security Guide](SECURITY.md) for security-related questions
 - Open an issue for bugs or feature requests
 
