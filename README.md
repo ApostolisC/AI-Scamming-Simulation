@@ -22,8 +22,8 @@ The easiest way to get started is using our automated setup script:
 
 ```bash
 # Clone the repository
-git clone https://github.com/ApostolisC/AI-Scammer-Simulation
-cd "AI Scammer Simulation"
+git clone https://github.com/ApostolisC/AI-Scamming-Simulation
+cd "AI-Scamming-Simulation"
 
 # Run the automated setup script
 python setup.py
@@ -43,8 +43,8 @@ If you prefer manual setup or need to troubleshoot:
 
 #### 1. Clone and Setup Virtual Environment
 ```bash
-git clone https://github.com/ApostolisC/AI-Scammer-Simulation
-cd "AI Scammer Simulation"
+git clone https://github.com/ApostolisC/AI-Scamming-Simulation
+cd "AI-Scamming-Simulation"
 
 # Create and activate virtual environment
 python -m venv venv
