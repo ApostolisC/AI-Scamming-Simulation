@@ -1,10 +1,10 @@
-# ScamSimAI
+# AI Scamming Simulation
 
 A sophisticated AI-powered platform for simulating and detecting scam communications. This tool helps users understand scammer tactics through realistic conversations and provides spam detection capabilities.
 
 ## 🎯 Overview
 
-ScamSimAI consists of three main components:
+AI-Scamming-Simulation consists of three main components:
 - **Frontend**: Next.js-based web interface for user interactions
 - **Backend**: Python modules for AI-powered text generation and classification
 - **Server**: FastAPI server providing secure API endpoints
@@ -87,7 +87,7 @@ cd ..
 #### Get Your Hugging Face Token:
 1. Go to [Hugging Face Settings](https://huggingface.co/settings/tokens)
 2. Click "New token"
-3. Give it a name (e.g., "ScamSimAI")
+3. Give it a name (e.g., "AIScammingSimulation")
 4. Select "Read" access
 5. Click "Generate a token"
 6. **Copy the token** (you won't see it again!)
@@ -150,7 +150,7 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-ScamSimAI/
+AI-Scamming-Simulation/
 ├── frontend/           # Next.js web application
 │   ├── components/     # React components
 │   ├── lib/           # Utility functions and API config
